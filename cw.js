@@ -1,3 +1,3 @@
-const uploadFile = function () {
+var uploadFile = function () {
 
 }
