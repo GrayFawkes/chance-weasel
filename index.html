@@ -110,8 +110,9 @@
 					if ( line['Tarif'] != undefined ) {
 						var nbTicket = line['Tarif'].replace(/[^0-9\.]+/g, '')
 						nbTicket = parseInt(nbTicket, 10)
-						var ticketSplitted = line['Url billet'].split('ag=')
-						var ticketID = ticketSplitted[1]
+						var url = line['Url billet'].split('ticketId=')
+						var params = url[1].split('&ag=')
+						var ticketID = params[0]
 						var i = 0
 						do {
 							i = i + 1
