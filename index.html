@@ -43,12 +43,15 @@
 							</div>
 							<div>
 								<span>Nb de lignes du fichier: </span><span>{{nbLinesFile}}</span>
+							</div>
+							<div>
 								<button type="button" class="btn btn-primary btn-sm" :disabled="nbLinesFile == 0" v-on:click="createTicketTable()">Création du fichier des tickets</button>
 							</div>
 							<div>
 								<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
+							</div>
+							<div>
 								<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV()">Export du fichier des tickets</button>
-								<!-- <button type="button" class="btn btn-danger btn-sm" :disabled="nbTickets == 0" v-on:click="tirage()">Tirage</button> -->
 							</div>
 						</div>
 					</div>
@@ -68,7 +71,7 @@
 									<span class="input-group-text" id="inputGroupFile2">Chargement des lots</span>
 								</div>
 								<div class="custom-file">
-									<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileChange">
+									<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileUpload">
 									<label class="custom-file-label" for="lotsFile">{{fileInput}}</label>
 								</div>
 							</div>
@@ -146,17 +149,17 @@
 		},
 		methods: {
 			onFileUpload(p_event) {
-				console.log(p_event)
-				debugger
+				// console.log(p_event)
+				// debugger
 				var files = p_event.target.files || p_event.dataTransfer.files
 				if (!files.length) return
 				// this.createInput(files[0], this.)
-				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], this.participantList)
-				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], this.lotsList)
+				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], 'participantList')
+				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], 'lotsList')
 
 			},
 			createInput(p_file, p_table) {
-
+				// debugger
 				this.fileInput = p_file.name
 				let promise = new Promise((resolve, reject) => {
 
@@ -165,7 +168,7 @@
 					reader.onload = e => {
 						resolve((vm.fileinput = reader.result));
 					}
-					reader.readAsText(file);
+					reader.readAsText(p_file)
 				})
 
 				promise.then(
@@ -196,14 +199,14 @@
 				}
 				table.splice(0,2)
 				this.nbLinesFile = table.length
-				p_table = table
-				debugger
+				this[p_table] = table
+				// debugger
 			},
 			createTicketTable() {
 				var tableTirage = []
-				// debugger
-				_.forEach(this.csvTable, function(line) {
-					// debugger
+				debugger
+				_.forEach(this.participantList, function(line) {
+					debugger
 					if ( line['Tarif'] != undefined ) {
 						var nbTicket = line['Tarif'].replace(/[^0-9\.]+/g, '')
 						nbTicket = parseInt(nbTicket, 10)
@@ -220,7 +223,7 @@
 				})
 				debugger
 				this.ticketTable = tableTirage
-				this.nbTickets = tableTirage.length
+				this.nbTickets = this.ticketTable.length
 			},
 			tirage() {
 				
