@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="ext/bootstrap.min.css">
 	<link rel="stylesheet" href="assets/style.css">
-	<script src="cw.js"></script>
+	<!-- <script src="cw.js"></script> -->
 	<script src="ext/vue.js"></script>
 	<script src="ext/jquery-3.5.1.min.js"></script>
 	<script src="ext/lodash.js"></script>
@@ -38,19 +38,19 @@
 								</div>
 								<div class="custom-file">
 									<input type="file" class="custom-file-input" id="participantsFile" aria-describedby="inputGroupFileAddon01" @change="onFileUpload">
-									<label class="custom-file-label" for="participantsFile">{{fileInput}}</label>
+									<label class="custom-file-label" for="participantsFile">{{fileName1}}</label>
 								</div>
 							</div>
 							<div>
-								<span>Nb de lignes du fichier: </span><span>{{nbLinesFile}}</span>
+								<span>Nb de participations: </span><span>{{nbLinesFile}}</span>
 							</div>
 							<div>
 								<button type="button" class="btn btn-primary btn-sm" :disabled="nbLinesFile == 0" v-on:click="createTicketTable()">Création du fichier des tickets</button>
 							</div>
-							<div>
+							<div v-show="nbLinesFile != 0">
 								<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
 							</div>
-							<div>
+							<div v-show="nbLinesFile != 0">
 								<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV()">Export du fichier des tickets</button>
 							</div>
 						</div>
@@ -72,7 +72,10 @@
 								</div>
 								<div class="custom-file">
 									<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileUpload">
-									<label class="custom-file-label" for="lotsFile">{{fileInput}}</label>
+									<label class="custom-file-label" for="lotsFile">{{fileName2}}</label>
+								</div>
+								<div>
+									<span>Nb de lignes du fichier: </span><span>{{lotsList.length}}</span>
 								</div>
 							</div>
 						</div>
@@ -93,44 +96,9 @@
 					</div>
 				</div>
 			</div>
-
-
-
-			<!-- <div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text" id="inputGroupFile1">Chargement des participants</span>
-				</div>
-				<div class="custom-file">
-					<input type="file" class="custom-file-input" id="participantsFile" aria-describedby="inputGroupFileAddon01" @change="onFileUpload">
-					<label class="custom-file-label" for="participantsFile">{{fileInput}}</label>
-				</div>
-			</div>
-			<div>
-				<span>Nb de lignes du fichier: </span><span>{{nbLinesFile}}</span>
-				<button type="button" class="btn btn-primary btn-sm" :disabled="nbLinesFile == 0" v-on:click="createTicketTable()">Création du fichier des tickets</button>
-			</div>
-			<div>
-				<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
-				<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV()">Export du fichier des tickets</button>
-			</div> -->
-			<!-- <div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text" id="inputGroupFile2">Chargement des lots</span>
-				</div>
-				<div class="custom-file">
-					<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileChange">
-					<label class="custom-file-label" for="lotsFile">{{fileInput}}</label>
-				</div>
-			</div> -->
 		</div>
 	</div>
 </body>
-<!-- <script src="cw.js"></script>
-<script src="ext/vue.js"></script>
-<script src="ext/jquery-3.5.1.min.js"></script>
-<script src="ext/lodash.js"></script>
-<script src="ext/popper.min.js"></script>
-<script src="ext/bootstrap.min.js"></script> -->
 <script>
 	var cw = new Vue({
 		el: '#cw',
@@ -141,7 +109,8 @@
 			lotsList: [],
 			ticketTable: [],
 			finalTable: [],
-			fileInput: 'Choose file',
+			fileName1: 'Choose file',
+			fileName2: 'Choose file',
 			message: 'Chance Weasel'
 		},
 		mounted() {
@@ -154,13 +123,13 @@
 				var files = p_event.target.files || p_event.dataTransfer.files
 				if (!files.length) return
 				// this.createInput(files[0], this.)
-				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], 'participantList')
-				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], 'lotsList')
+				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], 'participantList', 'fileName1')
+				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], 'lotsList', 'fileName2')
 
 			},
-			createInput(p_file, p_table) {
+			createInput(p_file, p_table, p_fileInput) {
 				// debugger
-				this.fileInput = p_file.name
+				this[p_fileInput] = p_file.name
 				let promise = new Promise((resolve, reject) => {
 
 					var reader = new FileReader();
@@ -195,18 +164,20 @@
 					for(var j = 0; j < header.length; j++) {
 						obj[header[j]] = currentline[j]
 					}
-					table.push(obj)
+					if (currentline != '') table.push(obj)
 				}
 				table.splice(0,2)
+				console.table(table)
+				debugger
 				this.nbLinesFile = table.length
 				this[p_table] = table
 				// debugger
 			},
 			createTicketTable() {
 				var tableTirage = []
-				debugger
+				// debugger
 				_.forEach(this.participantList, function(line) {
-					debugger
+					// debugger
 					if ( line['Tarif'] != undefined ) {
 						var nbTicket = line['Tarif'].replace(/[^0-9\.]+/g, '')
 						nbTicket = parseInt(nbTicket, 10)
