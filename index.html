@@ -51,7 +51,7 @@
 								<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
 							</div>
 							<div v-show="nbLinesFile != 0">
-								<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV()">Export du fichier des tickets</button>
+								<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV(true)">Export du fichier des tickets</button>
 							</div>
 						</div>
 					</div>
@@ -118,17 +118,12 @@
 		},
 		methods: {
 			onFileUpload(p_event) {
-				// console.log(p_event)
-				// debugger
 				var files = p_event.target.files || p_event.dataTransfer.files
 				if (!files.length) return
-				// this.createInput(files[0], this.)
 				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], 'participantList', 'fileName1')
 				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], 'lotsList', 'fileName2')
-
 			},
 			createInput(p_file, p_table, p_fileInput) {
-				// debugger
 				this[p_fileInput] = p_file.name
 				let promise = new Promise((resolve, reject) => {
 
@@ -145,13 +140,11 @@
 						this.parseFile(this.fileinput, p_table)
 					},
 					error => {
-						/* handle an error */ 
 						console.log(error);
 					}
 				)
 			},
 			parseFile(p_csv, p_table) {
-				debugger
 				var file = p_csv.split('\n')
 				var table = []
 				var header = file[0].split(';')
@@ -167,17 +160,12 @@
 					if (currentline != '') table.push(obj)
 				}
 				table.splice(0,2)
-				console.table(table)
-				debugger
 				this.nbLinesFile = table.length
 				this[p_table] = table
-				// debugger
 			},
 			createTicketTable() {
 				var tableTirage = []
-				// debugger
 				_.forEach(this.participantList, function(line) {
-					// debugger
 					if ( line['Tarif'] != undefined ) {
 						var nbTicket = line['Tarif'].replace(/[^0-9\.]+/g, '')
 						nbTicket = parseInt(nbTicket, 10)
@@ -192,9 +180,62 @@
 						} while (i < nbTicket)
 					}
 				})
-				debugger
+				// debugger
 				this.ticketTable = tableTirage
 				this.nbTickets = this.ticketTable.length
+			},
+			exportToCSV(p_header) {
+				debugger
+				// If JSONData is not an object then JSON.parse will parse the JSON string in an Object
+				var arrData = typeof this.ticketTable != 'object' ? JSON.parse(this.ticketTable) : this.ticketTable
+				var CSV = ''
+
+				// This condition will generate the Label/Header
+				if (p_header) {
+					var row = ""
+
+					// This loop will extract the label from 1st index of on array
+					for (var index in arrData[0]) {
+					// Now convert each value to string and comma-seprated
+						row += index + ';'
+					}
+					row = row.slice(0, -1)
+					// Append Label row with line break
+					CSV += row + '\r\n'
+				}
+
+				// 1st loop is to extract each row
+				for (var i = 0; i < arrData.length; i++) {
+						var row = ""
+						// 2nd loop will extract each column and convert it in string comma-seprated
+						for (var index in arrData[i]) {
+								row += '' + arrData[i][index] + ';'
+						}
+						row.slice(0, row.length - 1)
+						// Add a line break after each row
+						CSV += row + '\r\n'
+				}
+
+				// if (CSV == '') {
+				// 		alert("Invalid data")
+				// 		return
+				// }
+
+				// This trick will generate a temp "a" tag
+				var link = document.createElement("a")
+				link.id = "lnkDwnldLnk"
+
+				// This part will append the anchor tag and remove it after automatic click
+				document.body.appendChild(link)
+
+				var csv = CSV
+				blob = new Blob([csv], { type: 'text/csv' })
+				var csvUrl = window.webkitURL.createObjectURL(blob)
+				var filename = 'Tickets.csv'
+				$("#lnkDwnldLnk").attr({ 'download': filename, 'href': csvUrl })
+
+				$('#lnkDwnldLnk')[0].click()
+				document.body.removeChild(link)
 			},
 			tirage() {
 				
