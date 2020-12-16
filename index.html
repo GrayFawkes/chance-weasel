@@ -20,7 +20,80 @@
 	</header>
 	<div id="cw">
 		<div class="container-fluid upload-container">
-			<div class="input-group input-group-sm mb-3">
+			<div class="accordion" id="accordionExample">
+				<div class="card">
+					<div class="card-header" id="headingOne">
+						<h2 class="mb-0">
+							<button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+								1. Participants
+							</button>
+						</h2>
+					</div>
+			
+					<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+						<div class="card-body">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text" id="inputGroupFile1">Chargement des participants</span>
+								</div>
+								<div class="custom-file">
+									<input type="file" class="custom-file-input" id="participantsFile" aria-describedby="inputGroupFileAddon01" @change="onFileUpload">
+									<label class="custom-file-label" for="participantsFile">{{fileInput}}</label>
+								</div>
+							</div>
+							<div>
+								<span>Nb de lignes du fichier: </span><span>{{nbLinesFile}}</span>
+								<button type="button" class="btn btn-primary btn-sm" :disabled="nbLinesFile == 0" v-on:click="createTicketTable()">Création du fichier des tickets</button>
+							</div>
+							<div>
+								<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
+								<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV()">Export du fichier des tickets</button>
+								<!-- <button type="button" class="btn btn-danger btn-sm" :disabled="nbTickets == 0" v-on:click="tirage()">Tirage</button> -->
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="card">
+					<div class="card-header" id="headingTwo">
+						<h2 class="mb-0">
+							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+								2. Lots
+							</button>
+						</h2>
+					</div>
+					<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+						<div class="card-body">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text" id="inputGroupFile2">Chargement des lots</span>
+								</div>
+								<div class="custom-file">
+									<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileChange">
+									<label class="custom-file-label" for="lotsFile">{{fileInput}}</label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="card">
+					<div class="card-header" id="headingThree">
+						<h2 class="mb-0">
+							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+								3. Tirage
+							</button>
+						</h2>
+					</div>
+					<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+						<div class="card-body">
+							<button type="button" class="btn btn-danger btn-sm" :disabled="nbTickets == 0" v-on:click="tirage()">Tirage</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+
+			<!-- <div class="input-group input-group-sm mb-3">
 				<div class="input-group-prepend">
 					<span class="input-group-text" id="inputGroupFile1">Chargement des participants</span>
 				</div>
@@ -36,9 +109,8 @@
 			<div>
 				<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
 				<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV()">Export du fichier des tickets</button>
-				<button type="button" class="btn btn-danger btn-sm" :disabled="nbTickets == 0" v-on:click="tirage()">Tirage</button>
-			</div>
-			<div class="input-group input-group-sm mb-3">
+			</div> -->
+			<!-- <div class="input-group input-group-sm mb-3">
 				<div class="input-group-prepend">
 					<span class="input-group-text" id="inputGroupFile2">Chargement des lots</span>
 				</div>
@@ -46,7 +118,7 @@
 					<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileChange">
 					<label class="custom-file-label" for="lotsFile">{{fileInput}}</label>
 				</div>
-			</div>
+			</div> -->
 		</div>
 	</div>
 </body>
@@ -62,7 +134,8 @@
 		data: {
 			nbLinesFile: 0,
 			nbTickets: 0,
-			csvTable: [],
+			participantList: [],
+			lotsList: [],
 			ticketTable: [],
 			finalTable: [],
 			fileInput: 'Choose file',
@@ -72,18 +145,19 @@
 
 		},
 		methods: {
-			onFileUpload(event) {
-				console.log(event)
+			onFileUpload(p_event) {
+				console.log(p_event)
 				debugger
-				var files = event.target.files || event.dataTransfer.files
+				var files = p_event.target.files || p_event.dataTransfer.files
 				if (!files.length) return
-				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0])
-				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0])
+				// this.createInput(files[0], this.)
+				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], this.participantList)
+				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], this.lotsList)
 
 			},
-			createInput(file) {
-				// console.log(file)
-				this.fileInput = file.name
+			createInput(p_file, p_table) {
+
+				this.fileInput = p_file.name
 				let promise = new Promise((resolve, reject) => {
 
 					var reader = new FileReader();
@@ -96,7 +170,7 @@
 
 				promise.then(
 					result => {
-						this.parseFile(this.fileinput)
+						this.parseFile(this.fileinput, p_table)
 					},
 					error => {
 						/* handle an error */ 
@@ -104,12 +178,11 @@
 					}
 				)
 			},
-			parseFile(csv) {
-
-				var file = csv.split('\n')
+			parseFile(p_csv, p_table) {
+				debugger
+				var file = p_csv.split('\n')
 				var table = []
 				var header = file[0].split(';')
-				// console.log(header)
 
 				for(var i = 1; i < file.length; i++) {
 
@@ -123,9 +196,8 @@
 				}
 				table.splice(0,2)
 				this.nbLinesFile = table.length
-				this.csvTable = table
-				// console.table(table)
-				// this.processTable(table)
+				p_table = table
+				debugger
 			},
 			createTicketTable() {
 				var tableTirage = []
