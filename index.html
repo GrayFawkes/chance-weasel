@@ -42,16 +42,16 @@
 								</div>
 							</div>
 							<div>
-								<span>Nb de participations: </span><span>{{nbLinesFile}}</span>
+								<span>Nb de participations: </span><span>{{participants.length}}</span>
 							</div>
 							<div>
-								<button type="button" class="btn btn-primary btn-sm" :disabled="nbLinesFile == 0" v-on:click="createTicketTable()">Création du fichier des tickets</button>
+								<button type="button" class="btn btn-primary btn-sm" :disabled="participants.length == 0" v-on:click="createTickets()">Création du fichier des tickets</button>
 							</div>
-							<div v-show="nbLinesFile != 0">
-								<span>Nb de tickets créés: </span><span>{{nbTickets}}</span>
+							<div v-show="tickets.length != 0">
+								<span>Nb de tickets créés: </span><span>{{tickets.length}}</span>
 							</div>
-							<div v-show="nbLinesFile != 0">
-								<button type="button" class="btn btn-success btn-sm" :disabled="nbTickets == 0" v-on:click="exportToCSV(true)">Export du fichier des tickets</button>
+							<div v-show="tickets.length != 0">
+								<button type="button" class="btn btn-success btn-sm" :disabled="tickets.length == 0" v-on:click="exportToCSV(tickets, 'Tickets', true)">Export du fichier des tickets</button>
 							</div>
 						</div>
 					</div>
@@ -74,9 +74,9 @@
 									<input type="file" class="custom-file-input" id="lotsFile" aria-describedby="inputGroupFile2" @change="onFileUpload">
 									<label class="custom-file-label" for="lotsFile">{{fileName2}}</label>
 								</div>
-								<div>
-									<span>Nb de lignes du fichier: </span><span>{{lotsList.length}}</span>
-								</div>
+							</div>
+							<div>
+								<span>Nb de lignes du fichier: </span><span>{{lots.length}}</span>
 							</div>
 						</div>
 					</div>
@@ -91,7 +91,15 @@
 					</div>
 					<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
 						<div class="card-body">
-							<button type="button" class="btn btn-danger btn-sm" :disabled="nbTickets == 0" v-on:click="tirage()">Tirage</button>
+							<div>
+								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirage()">Tirage</button>
+							</div>
+							<div>
+								<span>Nb de gagnants: </span><span>{{winners.length}}</span>
+							</div>
+							<div v-show="winners.length != 0">
+								<button type="button" class="btn btn-success btn-sm" :disabled="winners.length == 0" v-on:click="exportToCSV(winners,'Gagnants', true)">Export du fichier des gagnants</button>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -103,25 +111,29 @@
 	var cw = new Vue({
 		el: '#cw',
 		data: {
-			nbLinesFile: 0,
-			nbTickets: 0,
-			participantList: [],
-			lotsList: [],
-			ticketTable: [],
-			finalTable: [],
+			participants: [],
+			tickets: [],
+			lots: [],
+			winners: [],
 			fileName1: 'Choose file',
 			fileName2: 'Choose file',
 			message: 'Chance Weasel'
 		},
 		mounted() {
-
+			String.prototype.replaceAt = function(index, replacement) {
+    		if (index >= this.length) {
+        	return this.valueOf()
+    		}
+ 
+    		return this.substring(0, index) + replacement + this.substring(index + 1)
+			}
 		},
 		methods: {
 			onFileUpload(p_event) {
 				var files = p_event.target.files || p_event.dataTransfer.files
 				if (!files.length) return
-				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], 'participantList', 'fileName1')
-				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], 'lotsList', 'fileName2')
+				if ( event.currentTarget.id == "participantsFile" ) this.createInput(files[0], 'participants', 'fileName1')
+				if ( event.currentTarget.id == "lotsFile" ) this.createInput(files[0], 'lots', 'fileName2')
 			},
 			createInput(p_file, p_table, p_fileInput) {
 				this[p_fileInput] = p_file.name
@@ -140,55 +152,64 @@
 						this.parseFile(this.fileinput, p_table)
 					},
 					error => {
-						console.log(error);
+						console.log(error)
 					}
 				)
 			},
 			parseFile(p_csv, p_table) {
-				var file = p_csv.split('\n')
-				var table = []
-				var header = file[0].split(';')
+				// debugger
+				
+				// Tranformation Header du fichier participants
+				let mailOldVal = '"Champ complémentaire 1\r\nAdresse email"'
+				let mailNewVal = 'Adresse email'
+				let telOldVal = '"Champ complémentaire 2\r\nNuméro de téléphone"'
+				let telNewVal = 'Téléphone'
 
-				for(var i = 1; i < file.length; i++) {
+				p_csv = p_csv.replace(mailOldVal, mailNewVal)
+				p_csv = p_csv.replace(telOldVal, telNewVal)
 
-					var obj = {};
+				let file = p_csv.split('\r\n')
+				let table = []
+				let header = file[0].split(';')
+
+				for(let i = 1; i < file.length; i++) {
+
+					var obj = {}
 					var currentline = file[i].split(";")
 
-					for(var j = 0; j < header.length; j++) {
-						obj[header[j]] = currentline[j]
+					for(let j = 0; j < header.length; j++) {
+						obj[header[j]] = ( currentline[j] == '" "' ) ? '' : currentline[j]
 					}
-					if (currentline != '') table.push(obj)
+					if (currentline[0] != '') table.push(obj)
 				}
-				table.splice(0,2)
-				this.nbLinesFile = table.length
+
 				this[p_table] = table
+				console.table(table)
 			},
-			createTicketTable() {
-				var tableTirage = []
-				_.forEach(this.participantList, function(line) {
+			createTickets() {
+				var _tickets = []
+				_.forEach(this.participants, function(line) {
 					if ( line['Tarif'] != undefined ) {
-						var nbTicket = line['Tarif'].replace(/[^0-9\.]+/g, '')
+						let nbTicket = line['Tarif'].replace(/[^0-9\.]+/g, '')
 						nbTicket = parseInt(nbTicket, 10)
-						var url = line['Url billet'].split('ticketId=')
-						var params = url[1].split('&ag=')
-						var ticketID = params[0]
-						var i = 0
+						let url = line['Url billet'].split('ticketId=')
+						let params = url[1].split('&ag=')
+						let ticketID = params[0]
+						let i = 0
 						do {
 							i = i + 1
-							var newLine = {'ticketID': ticketID + '-' + i, 'out': false }
-							tableTirage.push(newLine)
+							let newLine = {'ticketID': ticketID + '-' + i, 'Nom': line['Nom'], 'Prénom': line['Prénom'], 'Email acheteur': line['Email acheteur'], 'Adresse email': line['Adresse email'], 'Téléphone': line['Téléphone'] }
+							_tickets.push(newLine)
 						} while (i < nbTicket)
 					}
 				})
-				// debugger
-				this.ticketTable = tableTirage
-				this.nbTickets = this.ticketTable.length
+				this.tickets = _tickets
 			},
-			exportToCSV(p_header) {
+			exportToCSV(p_table, p_filename, p_header) {
 				debugger
 				// If JSONData is not an object then JSON.parse will parse the JSON string in an Object
-				var arrData = typeof this.ticketTable != 'object' ? JSON.parse(this.ticketTable) : this.ticketTable
-				var CSV = ''
+				let arrData = typeof p_table != 'object' ? JSON.parse(p_table) : p_table
+				let CSV = ''
 
 				// This condition will generate the Label/Header
 				if (p_header) {
@@ -208,7 +229,7 @@
 				for (var i = 0; i < arrData.length; i++) {
 						var row = ""
 						// 2nd loop will extract each column and convert it in string comma-seprated
-						for (var index in arrData[i]) {
+						for (let index in arrData[i]) {
 								row += '' + arrData[i][index] + ';'
 						}
 						row.slice(0, row.length - 1)
@@ -216,29 +237,55 @@
 						CSV += row + '\r\n'
 				}
 
-				// if (CSV == '') {
-				// 		alert("Invalid data")
-				// 		return
-				// }
+				// Filename
+				let date = new Date()
+				let timestamp = ''
+				let filename = p_filename + '_' + timestamp + '.csv'
+
+				let csv = CSV
+				let universalBOM = "\uFEFF"
+				let a = window.document.createElement('a')
+				a.setAttribute('href', 'data:text/csv; charset=utf-8,' + encodeURIComponent(universalBOM+csv))
+				a.setAttribute('download', filename)
+				window.document.body.appendChild(a)
+				a.click()
 
 				// This trick will generate a temp "a" tag
-				var link = document.createElement("a")
-				link.id = "lnkDwnldLnk"
+				// let link = document.createElement("a")
+				// link.id = "lnkDwnldLnk"
 
 				// This part will append the anchor tag and remove it after automatic click
-				document.body.appendChild(link)
+				// document.body.appendChild(link)
 
-				var csv = CSV
-				blob = new Blob([csv], { type: 'text/csv' })
-				var csvUrl = window.webkitURL.createObjectURL(blob)
-				var filename = 'Tickets.csv'
-				$("#lnkDwnldLnk").attr({ 'download': filename, 'href': csvUrl })
+				// let csv = CSV
+				// blob = new Blob([csv], { type: 'text/csv' })
+				// let csvUrl = window.webkitURL.createObjectURL(blob)
 
-				$('#lnkDwnldLnk')[0].click()
-				document.body.removeChild(link)
+				// File name
+
+				// $("#lnkDwnldLnk").attr({ 'download': filename, 'href': csvUrl })
+
+				// $('#lnkDwnldLnk')[0].click()
+				// document.body.removeChild(link)
 			},
 			tirage() {
+				// debugger
+				let nbMax = this.tickets.length - 1
 				
+				this.lots.forEach(lot => {
+					var winner = {'out': false}
+					do {
+						// debugger
+						let index = _.random(nbMax)
+						winner = this.tickets[index]
+
+					} while (winner.out == true)
+					winner.out = true
+
+					this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
+
+				})
+				// console.table(this.winners)
 			}
 		}
 	})
