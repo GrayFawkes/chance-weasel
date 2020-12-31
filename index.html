@@ -91,17 +91,17 @@
 					</div>
 					<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
 						<div class="card-body">
-							<div>
+							<div v-show="tirageDone">
 								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirage()">Tirage</button>
 							</div>
-							<div>
+							<!-- <div v-show="tirageDone">
 								<span>Nb de gagnants: </span><span>{{winners.length}}</span>
-							</div>
-							<div v-show="winners.length != 0">
+							</div> -->
+							<div v-show="tirageDone">
 								<button type="button" class="btn btn-success btn-sm" :disabled="winners.length == 0" v-on:click="exportToCSV(winners,'Gagnants', true)">Export du fichier des gagnants</button>
 							</div>
-							<div v-if="winners.length != 0">
-								<table class="table">
+							<div v-if="winners.length != 0"> <!-- class="table-responsive" -->
+								<table class="table table-hover">
 									<thead>
 										<tr>
 											<th scope="col">#</th>
@@ -110,29 +110,61 @@
 											<th scope="col">ticketID</th>
 											<th scope="col">Nom</th>
 											<th scope="col">Prénom</th>
-											<th scope="col">Email acheteur</th>
 											<th scope="col">Adresse email</th>
 											<th scope="col">Téléphone</th>
+											<th></th>
 										</tr>
 									</thead>
 									<tbody>
 										<tr v-for="(line) in winners" v-bind:key="line.IDlot" v-bind:title="line.Lot">
 											<td class="text-left">{{line['IDlot']}}</td>
-											<td class="text-left">{{line['Lot']}}</td>
+											<td class="text-left cell-lot">{{line['Lot']}}</td>
 											<td class="text-left">{{line['Valeur']}}</td>
-											<td class="text-left">{{line['ticketID']}}</td>
+											<td class="text-left cell-non-wrap">{{line['ticketID']}}</td>
 											<td class="text-left">{{line['Nom']}}</td>
 											<td class="text-left">{{line['Prénom']}}</td>
-											<td class="text-left">{{line['Email acheteur']}}</td>
+											<!-- <td class="text-left">{{line['Email acheteur']}}</td> -->
 											<td class="text-left">{{line['Adresse email']}}</td>
 											<td class="text-left">{{line['Téléphone']}}</td>
-											<!-- <td class="text right">
+											<td class="text right">
 												<button class="btn btn-danger btn-sm" v-on:click="tirageOne(line)">Tirage</button>
-											</td> -->
+											</td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
+							<!-- <div v-if="winners.length != 0">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th scope="col">#</th>
+											<th scope="col">Lot</th>
+											<th scope="col">Valeur</th>
+											<th scope="col">ticketID</th>
+											<th scope="col">Nom</th>
+											<th scope="col">Prénom</th>
+											<th scope="col">Adresse email</th>
+											<th scope="col">Téléphone</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr v-for="(line) in winners" v-bind:key="line.IDlot" v-bind:title="line.Lot">
+											<td class="text-left">{{line['IDlot']}}</td>
+											<td class="text-left cell-lot">{{line['Lot']}}</td>
+											<td class="text-left">{{line['Valeur']}}</td>
+											<td class="text-left cell-non-wrap">{{line['ticketID']}}</td>
+											<td class="text-left">{{line['Nom']}}</td>
+											<td class="text-left">{{line['Prénom']}}</td>
+											<td class="text-left">{{line['Adresse email']}}</td>
+											<td class="text-left">{{line['Téléphone']}}</td>
+											<td class="text right">
+												<button class="btn btn-danger btn-sm" v-on:click="tirageOne(line)">Tirage</button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div> -->
 						</div>
 					</div>
 				</div>
@@ -148,6 +180,8 @@
 			tickets: [],
 			lots: [],
 			winners: [],
+			tirages: [],
+			tirageDone: false,
 			fileName1: 'Choose file',
 			fileName2: 'Choose file',
 			message: 'Chance Weasel'

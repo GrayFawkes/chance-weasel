@@ -2,3 +2,15 @@
 	background-color: #e30b5d;
 	color: whitesmoke;
 }
+.cell-lot {
+  width: 600px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.table td {
+	padding: .25rem !important;
+}
+.cell-non-wrap {
+	white-space: nowrap;
+}
