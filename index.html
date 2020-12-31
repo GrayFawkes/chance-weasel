@@ -92,22 +92,23 @@
 					<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
 						<div class="card-body">
 							<div v-show="tirageDone">
-								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirage()">Tirage</button>
+								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirageAll()">Tirage</button>
+								<!-- <button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirage()">Tirage</button> -->
 							</div>
 							<!-- <div v-show="tirageDone">
 								<span>Nb de gagnants: </span><span>{{winners.length}}</span>
 							</div> -->
-							<div v-show="tirageDone">
-								<button type="button" class="btn btn-success btn-sm" :disabled="winners.length == 0" v-on:click="exportToCSV(winners,'Gagnants', true)">Export du fichier des gagnants</button>
+							<div v-show="tirages.length != 0">
+								<button type="button" class="btn btn-success btn-sm" :disabled="tirages.length == 0" v-on:click="exportToCSV(winners,'Gagnants', true)">Export du fichier des gagnants</button>
 							</div>
-							<div v-if="winners.length != 0"> <!-- class="table-responsive" -->
+							<div v-if="tirages.length != 0"> <!-- class="table-responsive" -->
 								<table class="table table-hover">
 									<thead>
 										<tr>
 											<th scope="col">#</th>
 											<th scope="col">Lot</th>
 											<th scope="col">Valeur</th>
-											<th scope="col">ticketID</th>
+											<th scope="col">N°Ticket</th>
 											<th scope="col">Nom</th>
 											<th scope="col">Prénom</th>
 											<th scope="col">Adresse email</th>
@@ -116,18 +117,18 @@
 										</tr>
 									</thead>
 									<tbody>
-										<tr v-for="(line) in winners" v-bind:key="line.IDlot" v-bind:title="line.Lot">
-											<td class="text-left">{{line['IDlot']}}</td>
-											<td class="text-left cell-lot">{{line['Lot']}}</td>
+										<tr v-for="(line) in tirages" v-bind:key="line.IDlot" v-bind:title="line.Lot">
+											<td class="text-left" v-bind:title="line['ID']">{{line['ID']}}</td>
+											<td class="text-left cell-lot">{{line['Lots']}}</td>
 											<td class="text-left">{{line['Valeur']}}</td>
-											<td class="text-left cell-non-wrap">{{line['ticketID']}}</td>
-											<td class="text-left">{{line['Nom']}}</td>
-											<td class="text-left">{{line['Prénom']}}</td>
+											<td class="text-left cell-non-wrap" v-bind:title="line['ticketID']">{{line['ticketID']}}</td>
+											<td class="text-left" v-bind:title="line['Nom']">{{line['Nom']}}</td>
+											<td class="text-left" v-bind:title="line['Prénom']">{{line['Prénom']}}</td>
 											<!-- <td class="text-left">{{line['Email acheteur']}}</td> -->
-											<td class="text-left">{{line['Adresse email']}}</td>
-											<td class="text-left">{{line['Téléphone']}}</td>
+											<td class="text-left" v-bind:title="line['Adresse email']">{{line['Adresse email']}}</td>
+											<td class="text-left" v-bind:title="line['Téléphone']">{{line['Téléphone']}}</td>
 											<td class="text right">
-												<button class="btn btn-danger btn-sm" v-on:click="tirageOne(line)">Tirage</button>
+												<button class="btn btn-danger btn-sm" @click="tirageOne(line)">Tirage</button>
 											</td>
 										</tr>
 									</tbody>
@@ -177,6 +178,7 @@
 		el: '#cw',
 		data: {
 			participants: [],
+			nbMaxTickets: 0,
 			tickets: [],
 			lots: [],
 			winners: [],
@@ -240,7 +242,6 @@
 				p_csv = p_csv.replace(telOldVal1, telNewVal)
 				p_csv = p_csv.replace(telOldVal2, telNewVal)
 
-				// debugger
 				let file = p_csv.split('\r\n')
 				let table = []
 				let header = file[0].split(';')
@@ -251,13 +252,16 @@
 					var currentline = file[i].split(";")
 
 					for(let j = 0; j < header.length; j++) {
-						obj[header[j]] = ( currentline[j] == '" "' ) ? '' : currentline[j]
+						var field = ( currentline[j] != '" "' && currentline[j] != undefined ) ? currentline[j] :  ''
+						debugger
+						field = field.replaceAll('"', '')
+						obj[header[j]] = field.trim()
 					}
 					if (currentline[0] != '') table.push(obj)
 				}
-				// debugger
 				this[p_table] = table
-				// console.log(table.length)
+				console.table(table)
+				if (p_table == 'lots') this.tirages = table
 			},
 			createTickets() {
 				var _tickets = []
@@ -277,9 +281,9 @@
 					}
 				})
 				this.tickets = _tickets
+				this.nbMaxTickets = this.tickets.length - 1
 			},
 			exportToCSV(p_table, p_filename, p_header) {
-				debugger
 				// If JSONData is not an object then JSON.parse will parse the JSON string in an Object
 				let arrData = typeof p_table != 'object' ? JSON.parse(p_table) : p_table
 				let CSV = ''
@@ -312,7 +316,7 @@
 
 				// Filename
 				let date = new Date()
-				let timestamp = ''
+				let timestamp = getTimeStramp()
 				let filename = p_filename + '_' + timestamp + '.csv'
 
 				let csv = CSV
@@ -322,6 +326,20 @@
 				a.setAttribute('download', filename)
 				window.document.body.appendChild(a)
 				a.click()
+
+				// function getTimeStramp() {
+				// 	return util.printd("yyyymmdd_HHMMss", new Date());
+				// }
+				function getTimeStramp() {
+    			let today = new Date();
+    			let y = today.getFullYear()
+					let m = today.getMonth() + 1
+					let d = today.getDate()
+					let h = today.getHours()
+					let mi = today.getMinutes()
+					let s = today.getSeconds()
+    			return y + m + d + '_' + h + mi + s
+				}
 
 				// This trick will generate a temp "a" tag
 				// let link = document.createElement("a")
@@ -344,13 +362,13 @@
 			tirage() {
 				this.winners = []
 				// debugger
-				let nbMax = this.tickets.length - 1
+				// let nbMax = this.tickets.length - 1
 				
 				this.lots.forEach(lot => {
 					var winner = {'out': false}
 					do {
 						// debugger
-						let index = _.random(nbMax)
+						let index = _.random(this.nbMaxTickets)
 						winner = this.tickets[index]
 
 					} while (winner.out == true)
@@ -361,36 +379,39 @@
 				})
 				// console.table(this.winners)
 			},
-			tirageOne() {
-				this.winners = []
+			tirageOne(line) {
 				// debugger
-				let nbMax = this.tickets.length - 1
+				// var obj
+				// let nbMax = this.tickets.length - 1
+				var winner = {'out': false}
+				let index = _.random(this.nbMaxTickets)
+				winner = this.tickets[index]
 				
-				this.lots.forEach(lot => {
-					var winner = {'out': false}
-					do {
-						// debugger
-						let index = _.random(nbMax)
-						winner = this.tickets[index]
+				// obj = line
+				this.$set(line, 'ticketID', winner['ticketID'])
+				this.$set(line, 'Nom', winner['Nom'])
+				this.$set(line, 'Prénom', winner['Prénom'])
+				this.$set(line, 'Email acheteur', winner['Email acheteur'])
+				this.$set(line, 'Adresse email', winner['Adresse email'])
+				this.$set(line, 'Téléphone', winner['Téléphone'])
+				// obj['ticketID'] = winner['ticketID']
+				// obj['Nom'] = winner['Nom']
+				// obj['Prénom'] = winner['Prénom']
+				// obj['Email acheteur'] = winner['Email acheteur']
+				// obj['Adresse email'] = winner['Adresse email']
+				// obj['Téléphone'] = winner['Téléphone']
 
-					} while (winner.out == true)
-					winner.out = true
-
-					this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
-
-				})
-				// console.table(this.winners)
+				// this.$set(line, 'studEdit', true)
+				this.winners.push({'IDlot': line.ID, 'Lot': line.Lots, 'Valeur': line.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
 			},
 			tirageAll() {
 				this.winners = []
-				// debugger
-				let nbMax = this.tickets.length - 1
 				
 				this.lots.forEach(lot => {
 					var winner = {'out': false}
 					do {
 						// debugger
-						let index = _.random(nbMax)
+						let index = _.random(this.nbMaxTickets)
 						winner = this.tickets[index]
 
 					} while (winner.out == true)
