@@ -100,6 +100,39 @@
 							<div v-show="winners.length != 0">
 								<button type="button" class="btn btn-success btn-sm" :disabled="winners.length == 0" v-on:click="exportToCSV(winners,'Gagnants', true)">Export du fichier des gagnants</button>
 							</div>
+							<div v-if="winners.length != 0">
+								<table class="table">
+									<thead>
+										<tr>
+											<th scope="col">#</th>
+											<th scope="col">Lot</th>
+											<th scope="col">Valeur</th>
+											<th scope="col">ticketID</th>
+											<th scope="col">Nom</th>
+											<th scope="col">Prénom</th>
+											<th scope="col">Email acheteur</th>
+											<th scope="col">Adresse email</th>
+											<th scope="col">Téléphone</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr v-for="(line) in winners" v-bind:key="line.IDlot" v-bind:title="line.Lot">
+											<td class="text-left">{{line['IDlot']}}</td>
+											<td class="text-left">{{line['Lot']}}</td>
+											<td class="text-left">{{line['Valeur']}}</td>
+											<td class="text-left">{{line['ticketID']}}</td>
+											<td class="text-left">{{line['Nom']}}</td>
+											<td class="text-left">{{line['Prénom']}}</td>
+											<td class="text-left">{{line['Email acheteur']}}</td>
+											<td class="text-left">{{line['Adresse email']}}</td>
+											<td class="text-left">{{line['Téléphone']}}</td>
+											<!-- <td class="text right">
+												<button class="btn btn-danger btn-sm" v-on:click="tirageOne(line)">Tirage</button>
+											</td> -->
+										</tr>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -160,14 +193,20 @@
 				// debugger
 				
 				// Tranformation Header du fichier participants
-				let mailOldVal = '"Champ complémentaire 1\r\nAdresse email"'
+				let mailOldVal1 = '"Champ complémentaire 1\r\nAdresse email"'
+				let mailOldVal2 = '"Champ complémentaire 2\r\nAdresse email"'
+				let telOldVal1 = '"Champ complémentaire 1\r\nNuméro de téléphone"'
+				let telOldVal2 = '"Champ complémentaire 2\r\nNuméro de téléphone"'
+
 				let mailNewVal = 'Adresse email'
-				let telOldVal = '"Champ complémentaire 2\r\nNuméro de téléphone"'
 				let telNewVal = 'Téléphone'
 
-				p_csv = p_csv.replace(mailOldVal, mailNewVal)
-				p_csv = p_csv.replace(telOldVal, telNewVal)
+				p_csv = p_csv.replace(mailOldVal1, mailNewVal)
+				p_csv = p_csv.replace(mailOldVal2, mailNewVal)
+				p_csv = p_csv.replace(telOldVal1, telNewVal)
+				p_csv = p_csv.replace(telOldVal2, telNewVal)
 
+				// debugger
 				let file = p_csv.split('\r\n')
 				let table = []
 				let header = file[0].split(';')
@@ -182,9 +221,9 @@
 					}
 					if (currentline[0] != '') table.push(obj)
 				}
-
+				// debugger
 				this[p_table] = table
-				console.table(table)
+				// console.log(table.length)
 			},
 			createTickets() {
 				var _tickets = []
@@ -269,6 +308,47 @@
 				// document.body.removeChild(link)
 			},
 			tirage() {
+				this.winners = []
+				// debugger
+				let nbMax = this.tickets.length - 1
+				
+				this.lots.forEach(lot => {
+					var winner = {'out': false}
+					do {
+						// debugger
+						let index = _.random(nbMax)
+						winner = this.tickets[index]
+
+					} while (winner.out == true)
+					winner.out = true
+
+					this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
+
+				})
+				// console.table(this.winners)
+			},
+			tirageOne() {
+				this.winners = []
+				// debugger
+				let nbMax = this.tickets.length - 1
+				
+				this.lots.forEach(lot => {
+					var winner = {'out': false}
+					do {
+						// debugger
+						let index = _.random(nbMax)
+						winner = this.tickets[index]
+
+					} while (winner.out == true)
+					winner.out = true
+
+					this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
+
+				})
+				// console.table(this.winners)
+			},
+			tirageAll() {
+				this.winners = []
 				// debugger
 				let nbMax = this.tickets.length - 1
 				
