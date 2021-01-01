@@ -63,3 +63,6 @@
 .cell-non-wrap {
 	white-space: nowrap;
 }
+.buttons {
+  margin-right: 10px;
+}
