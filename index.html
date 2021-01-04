@@ -97,7 +97,7 @@
 							</div>
 							<div v-show="tirages.length != 0">
 								<button type="button" class="btn btn-success btn-sm" :disabled="tirages.length == 0" v-on:click="exportToCSV(winners,'Gagnants', true)">Export du fichier des gagnants</button>
-								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirageAll()">Tirage des lots restants</button>
+								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirageAllLeft()">Tirage des lots restants</button>
 							</div>
 							<div v-if="tirages.length != 0"> <!-- class="table-responsive" -->
 								<table class="table table-hover">
@@ -105,7 +105,7 @@
 										<tr>
 											<th scope="col">#</th>
 											<th scope="col">Lot</th>
-											<th scope="col">Valeur</th>
+											<!-- <th scope="col">Valeur</th> -->
 											<th scope="col">N°Ticket</th>
 											<th scope="col">Nom</th>
 											<th scope="col">Prénom</th>
@@ -118,7 +118,7 @@
 										<tr v-for="(line) in tirages" v-bind:key="line.IDlot" v-bind:title="line.Lot">
 											<td class="text-left" v-bind:title="line['ID']">{{line['ID']}}</td>
 											<td class="text-left cell-lot">{{line['Lots']}}</td>
-											<td class="text-left">{{line['Valeur']}}</td>
+											<!-- <td class="text-left">{{line['Valeur']}}</td> -->
 											<td class="text-left cell-non-wrap" v-bind:title="line['ticketID']">{{line['ticketID']}}</td>
 											<td class="text-left" v-bind:title="line['Nom']">{{line['Nom']}}</td>
 											<td class="text-left" v-bind:title="line['Prénom']">{{line['Prénom']}}</td>
@@ -132,86 +132,6 @@
 									</tbody>
 								</table>
 							</div>
-							<!-- <div v-if="winners.length != 0">
-								<table class="table table-hover">
-									<thead>
-										<tr>
-											<th scope="col">#</th>
-											<th scope="col">Lot</th>
-											<th scope="col">Valeur</th>
-											<th scope="col">ticketID</th>
-											<th scope="col">Nom</th>
-											<th scope="col">Prénom</th>
-											<th scope="col">Adresse email</th>
-											<th scope="col">Téléphone</th>
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr v-for="(line) in winners" v-bind:key="line.IDlot" v-bind:title="line.Lot">
-											<td class="text-left">{{line['IDlot']}}</td>
-											<td class="text-left cell-lot">{{line['Lot']}}</td>
-											<td class="text-left">{{line['Valeur']}}</td>
-											<td class="text-left cell-non-wrap">{{line['ticketID']}}</td>
-											<td class="text-left">{{line['Nom']}}</td>
-											<td class="text-left">{{line['Prénom']}}</td>
-											<td class="text-left">{{line['Adresse email']}}</td>
-											<td class="text-left">{{line['Téléphone']}}</td>
-											<td class="text right">
-												<button class="btn btn-danger btn-sm" v-on:click="tirageOne(line)">Tirage</button>
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</div> -->
-						</div>
-					</div>
-				</div>
-				<div class="card" id="card3v1" v-if="false">
-					<div class="card-header" id="headingThree">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-								3. Tirage
-							</button>
-						</h2>
-					</div>
-					<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-						<div class="card-body">
-							<div>
-								<button type="button" class="btn btn-danger btn-sm" :disabled="tickets.length == 0 || lots.length == 0" v-on:click="tirage()">Tirage</button>
-							</div>
-							<div v-if="winners.length != 0">
-								<table class="table table-hover">
-									<thead>
-										<tr>
-											<th scope="col">#</th>
-											<th scope="col">Lot</th>
-											<th scope="col">Valeur</th>
-											<th scope="col">ticketID</th>
-											<th scope="col">Nom</th>
-											<th scope="col">Prénom</th>
-											<th scope="col">Adresse email</th>
-											<th scope="col">Téléphone</th>
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr v-for="(line) in winners" v-bind:key="line.IDlot" v-bind:title="line.Lot">
-											<td class="text-left">{{line['IDlot']}}</td>
-											<td class="text-left cell-lot">{{line['Lot']}}</td>
-											<td class="text-left">{{line['Valeur']}}</td>
-											<td class="text-left cell-non-wrap">{{line['ticketID']}}</td>
-											<td class="text-left">{{line['Nom']}}</td>
-											<td class="text-left">{{line['Prénom']}}</td>
-											<td class="text-left">{{line['Adresse email']}}</td>
-											<td class="text-left">{{line['Téléphone']}}</td>
-											<td class="text right">
-												<button class="btn btn-danger btn-sm" v-on:click="tirageOne(line)">Tirage</button>
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</div> -->
 						</div>
 					</div>
 				</div>
@@ -405,16 +325,20 @@
 				this.winners = []
 				
 				this.lots.forEach(lot => {
-					var winner = {'out': false}
-					do {
-						// debugger
-						let index = _.random(this.nbMaxTickets)
-						winner = this.tickets[index]
 
-					} while (winner.out == true)
-					winner.out = true
+					let winner = this.getWinner()
 
-					this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
+					// var winner = {'out': false}
+					// do {
+					// 	// debugger
+					// 	let index = _.random(this.nbMaxTickets)
+					// 	winner = this.tickets[index]
+
+					// } while (winner.out == true)
+					// winner.out = true
+
+					this.winners.push(this.fillLine(lot, winner))
+					// this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
 
 				})
 			},
@@ -433,13 +357,22 @@
 				this.winners.push(this.fillLine(line, winner))
 				// this.winners.push({'IDlot': line.ID, 'Lot': line.Lots, 'Valeur': line.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
 			},
-			tirageAll() {
+			tirageAllLeft() {
 				// this.winners = []
-				debugger
+				// debugger
 				this.lots.forEach(lot => {
-					if ( lot.ticketID != '' ) {
+					debugger
+					if ( lot.ticketID == undefined ) {
 						let winner = this.getWinner()
-						this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
+						this.$set(lot, 'ticketID', winner['ticketID'])
+						this.$set(lot, 'Nom', winner['Nom'])
+						this.$set(lot, 'Prénom', winner['Prénom'])
+						this.$set(lot, 'Email acheteur', winner['Email acheteur'])
+						this.$set(lot, 'Adresse email', winner['Adresse email'])
+						this.$set(lot, 'Téléphone', winner['Téléphone'])
+
+						this.winners.push(this.fillLine(lot, winner))
+						// this.winners.push({'IDlot': lot.ID, 'Lot': lot.Lots, 'Valeur': lot.Valeur, 'ticketID': winner['ticketID'], 'Nom': winner['Nom'], 'Prénom': winner['Prénom'], 'Email acheteur': winner['Email acheteur'], 'Adresse email': winner['Adresse email'], 'Téléphone': ' ' + winner['Téléphone'] })
 					}
 					
 				})
